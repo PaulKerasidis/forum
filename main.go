@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/PaulKerasidis/forum/database"
 )
 
 const (
@@ -13,7 +12,7 @@ const (
 )
 
 func main() {
-	db, err := database.InitDB()
+	db, err := InitDB()
 	if err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
