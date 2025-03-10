@@ -7,11 +7,7 @@ import (
 	"time"
 )
 
-type Login struct {
-	HashedPassword string
-	SessionToken   string
-	CSRFToken      string
-}
+
 
 var users = map[string]Login{}
 
@@ -26,13 +22,13 @@ func main() {
 	http.HandleFunc("/logout", logout)
 	http.HandleFunc("/protected", protected)
 
-	// db, err := InitDB()
-	// if err != nil {
-	// 	log.Fatalf("Failed to initialize database: %v", err)
-	// }
-	// defer db.Close()
+	db, err := InitDB()
+	if err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
+	defer db.Close()
 
-	// fmt.Println("Database setup completed successfully.")
+	fmt.Println("Database setup completed successfully.")
 
 	// Start the HTTP server on port 8080 and log any fatal errors.
 	fmt.Println("Server started on port 8080")
