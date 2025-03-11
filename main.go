@@ -4,156 +4,24 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
-)
 
-
-
-var users = map[string]Login{}
-
-const (
-	port = ":8080"
+	"github.com/PaulKerasidis/forum/database"
+	"github.com/PaulKerasidis/forum/routes"
 )
 
 func main() {
-
-	http.HandleFunc("/register", register)
-	http.HandleFunc("/login", login)
-	http.HandleFunc("/logout", logout)
-	http.HandleFunc("/protected", protected)
-
-	db, err := InitDB()
+	// Initialize database
+	db, err := database.InitDB()
 	if err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
 	defer db.Close()
 
-	fmt.Println("Database setup completed successfully.")
+	// Setup routes
+	handler := routes.SetupRoutes(db)
 
-	// Start the HTTP server on port 8080 and log any fatal errors.
-	fmt.Println("Server started on port 8080")
-	if err := http.ListenAndServe(port, nil); err != nil {
-		log.Fatal(err)
-	}
-}
-
-func register(w http.ResponseWriter, r *http.Request) {
-
-	if r.Method != http.MethodPost {
-		er := http.StatusMethodNotAllowed
-		http.Error(w, "Invalid Method", er)
-		return
-	}
-
-	username := r.FormValue("username")
-	password := r.FormValue("password")
-	if len(username) < 8 || len(password) < 8 {
-		er := http.StatusNotAcceptable
-		http.Error(w, "Username and Password must be at least 8 characters long", er)
-		return
-	}
-
-	if _, ok := users[username]; ok {
-		er := http.StatusConflict
-		http.Error(w, "Username already exists", er)
-		return
-	}
-
-	hashedPassword, _ := hashPassword(password)
-	users[username] = Login{
-		HashedPassword: hashedPassword,
-	}
-
-	fmt.Fprintln(w, "User registered successfully.")
-}
-func login(w http.ResponseWriter, r *http.Request) {
-
-	username := r.FormValue("username")
-	password := r.FormValue("password")
-
-	user, ok := users[username]
-	if !ok || !checkPasswordHash(password, user.HashedPassword) {
-		er := http.StatusNotFound
-		http.Error(w, "User not found", er)
-		return
-	}
-
-	sessionToken := generateToken(32)
-	csrfToken := generateToken(32)
-
-	//Set Session Cookie
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_token",
-		Value:    sessionToken,
-		Expires:  time.Now().Add(24 * time.Hour),
-		HttpOnly: true,
-	})
-
-	//Set CSRF Cookie in a cookie
-	http.SetCookie(w, &http.Cookie{
-		Name:     "csrf_token",
-		Value:    csrfToken,
-		Expires:  time.Now().Add(24 * time.Hour),
-		HttpOnly: false,
-	})
-
-	//Store token in the database
-	user.SessionToken = sessionToken
-	user.CSRFToken = csrfToken
-	users[username] = user
-
-	fmt.Fprintln(w, "Login successful")
-
-}
-
-func logout(w http.ResponseWriter, r *http.Request) {
-
-	if err := Authorize(r); err != nil {
-		er := http.StatusUnauthorized
-		http.Error(w, "Unauthorized", er)
-		return
-	}
-
-	//Clear cookie
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_token",
-		Value:    "",
-		Expires:  time.Now().Add(-time.Hour),
-		HttpOnly: true,
-	})
-	http.SetCookie(w, &http.Cookie{
-		Name:     "csrf_token",
-		Value:    "",
-		Expires:  time.Now().Add(-time.Hour),
-		HttpOnly: false,
-	})
-
-	//Clear the token in the database
-	username := r.FormValue("username")
-	user := users[username]
-	user.SessionToken = ""
-	user.CSRFToken = ""
-	users[username] = user
-
-	fmt.Fprintln(w, "Logout successful")
-
-}
-
-func protected(w http.ResponseWriter, r *http.Request) {
-
-	if r.Method != http.MethodPost {
-		er := http.StatusMethodNotAllowed
-		http.Error(w, "Invalid Method", er)
-		return
-	}
-
-	if err := Authorize(r); err != nil {
-		er := http.StatusUnauthorized
-		http.Error(w, "Unauthorized", er)
-		return
-	}
-
-	username := r.FormValue("username")
-	fmt.Fprintf(w, "CSRF validation successful! Welcome %s", username)
-
+	// Start server
+	port := 8080
+	fmt.Printf("Server is running on http://localhost:%d\n", port)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), handler))
 }
