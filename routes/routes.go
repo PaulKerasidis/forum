@@ -4,9 +4,9 @@ import (
 	"database/sql"
 	"net/http"
 
-	"forum/handlers"
-	"forum/middleware"
-	"forum/models"
+	"github.com/PaulKerasidis/forum/handlers"
+	"github.com/PaulKerasidis/forum/middleware"
+	"github.com/PaulKerasidis/forum/models"
 )
 
 // SetupRoutes configures all routes for the application

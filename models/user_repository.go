@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"forum/utils"
+	"github.com/PaulKerasidis/forum/utils"
 )
 
 var (

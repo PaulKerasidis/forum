@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"forum/models"
+	"github.com/PaulKerasidis/forum/models"
 )
 
 // AuthHandler handles authentication-related requests

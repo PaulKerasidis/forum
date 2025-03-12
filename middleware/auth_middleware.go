@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"forum/models"
+	"github.com/PaulKerasidis/forum/models"
 )
 
 // Authentication middleware checks if the user is authenticated
