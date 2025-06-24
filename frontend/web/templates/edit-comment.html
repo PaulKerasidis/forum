@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Comment - Forum</title>
+    <!-- Global CSS first, then create-post CSS for form styling -->
+    <link rel="stylesheet" href="/static/css/global.css">
+    <link rel="stylesheet" href="/static/css/create-post.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Component (using global CSS) -->
+        <header class="header">
+            <h1>Forum404NotFound</h1>
+            <nav>
+                <a href="/">Home</a>
+                {{if .User}}
+                    <a href="/create-post">Create Post</a>
+                    <a href="/profile">Profile</a>
+                    <span>Welcome, {{.User.Username | html}}!</span>
+                    <form method="POST" action="/logout" style="display: inline;">
+                        <button type="submit">Logout</button>
+                    </form>
+                {{else}}
+                    <a href="/login">Login</a>
+                    <a href="/register">Register</a>
+                {{end}}
+            </nav>
+        </header>
+
+        <!-- Breadcrumb Component (using global CSS) -->
+        <nav class="breadcrumb">
+            <a href="/"><i class="fas fa-home"></i> Home</a>
+            <span class="separator">></span>
+            <a href="/post/{{.Comment.PostID}}"><i class="fas fa-file-alt"></i> Post</a>
+            <span class="separator">></span>
+            <span class="current">Edit Comment</span>
+        </nav>
+
+        <!-- Main Content Grid (using global CSS) -->
+        <div class="main-content">
+            <!-- Edit Comment Form Section -->
+            <section class="create-post-section comment-edit-section">
+                <div class="form-header">
+                    <h2><i class="fas fa-edit"></i> Edit Comment</h2>
+                    <p>Update your comment content</p>
+                </div>
+
+                {{if .Error}}
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    {{.Error | html}}
+                </div>
+                {{end}}
+
+                <form method="POST" action="/edit-comment/{{.Comment.ID}}/submit" class="create-post-form comment-form">
+                    <!-- Comment Content -->
+                    <div class="form-group">
+                        <label for="content" class="form-label">
+                            <i class="fas fa-comment"></i> Comment Content *
+                        </label>
+                        <textarea 
+                            id="content" 
+                            name="content" 
+                            class="form-control comment-textarea"
+                            placeholder="Write your comment here..." 
+                            required 
+                            minlength="5" 
+                            maxlength="150"
+                            rows="4">{{.Comment.Content | html}}</textarea>
+                        <div class="character-counter">
+                            <span id="char-count">0</span> / 150 characters
+                            <span class="min-chars">(minimum 5 characters)</span>
+                        </div>
+                        <small class="form-help">
+                            <i class="fas fa-info-circle"></i>
+                            Keep your comment concise and relevant. 5-150 characters.
+                        </small>
+                    </div>
+
+                    <!-- Hidden field for redirect -->
+                    <input type="hidden" name="redirect_to" value="/post/{{.Comment.PostID}}">
+
+                    <!-- Form Actions (using global CSS buttons) -->
+                    <div class="form-actions">
+                        <a href="/post/{{.Comment.PostID}}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary" id="submit-btn">
+                            <i class="fas fa-save"></i> Update Comment
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Sidebar (using global CSS) -->
+            <aside class="sidebar">
+                <h3><i class="fas fa-eye"></i> Original Comment</h3>
+                <div class="comment-preview">
+                    <div class="original-comment">
+                        <div class="comment-meta">
+                            <strong>{{.Comment.Username | html}}</strong>
+                            <span>{{.Comment.CreatedAt.Format "Jan 2, 2006 at 3:04 PM"}}</span>
+                            {{if .Comment.UpdatedAt}}
+                                <span class="updated">• Updated</span>
+                            {{end}}
+                        </div>
+                        <div class="comment-content">
+                            {{.Comment.Content | html}}
+                        </div>
+                        <div class="comment-stats">
+                            <span><i class="fas fa-thumbs-up"></i> {{.Comment.LikeCount}}</span>
+                            <span><i class="fas fa-thumbs-down"></i> {{.Comment.DislikeCount}}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-widget mt-3xl">
+                    <h4><i class="fas fa-clipboard-list"></i> Comment Guidelines</h4>
+                    <div class="posting-guidelines">
+                        <ul>
+                            <li><i class="fas fa-check"></i> Stay on topic and relevant</li>
+                            <li><i class="fas fa-check"></i> Be respectful to others</li>
+                            <li><i class="fas fa-check"></i> Keep comments concise</li>
+                            <li><i class="fas fa-check"></i> Add value to the discussion</li>
+                            <li><i class="fas fa-exclamation"></i> Avoid spam or repetitive content</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Quick Actions (using global CSS) -->
+                <div class="quick-actions">
+                    <h4><i class="fas fa-bolt"></i> Quick Actions</h4>
+                    <p><a href="/post/{{.Comment.PostID}}" class="action-link">
+                        <i class="fas fa-arrow-left"></i> Back to Post
+                    </a></p>
+                    <p><a href="/profile" class="action-link">
+                        <i class="fas fa-user"></i> Your Profile
+                    </a></p>
+                    <p><a href="/" class="action-link">
+                        <i class="fas fa-home"></i> Back to Home
+                    </a></p>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const contentTextarea = document.getElementById('content');
+            const submitBtn = document.getElementById('submit-btn');
+            const charCount = document.getElementById('char-count');
+
+            // Update character count display
+            function updateCharCount() {
+                const currentLength = contentTextarea.value.length;
+                charCount.textContent = currentLength;
+                
+                // Color coding for character count
+                if (currentLength < 5) {
+                    charCount.style.color = '#e74c3c'; // Red - too short
+                } else if (currentLength > 130) {
+                    charCount.style.color = '#f39c12'; // Orange - getting close to limit
+                } else {
+                    charCount.style.color = '#27ae60'; // Green - good length
+                }
+            }
+
+            // Form validation
+            function validateForm() {
+                const content = contentTextarea.value.trim();
+                const isValid = content.length >= 5 && content.length <= 150;
+                
+                // Update submit button state
+                submitBtn.disabled = !isValid;
+                if (isValid) {
+                    submitBtn.classList.remove('disabled');
+                } else {
+                    submitBtn.classList.add('disabled');
+                }
+                
+                return isValid;
+            }
+
+            // Event listeners
+            contentTextarea.addEventListener('input', function() {
+                updateCharCount();
+                validateForm();
+            });
+
+            // Form submission validation
+            document.querySelector('.comment-form').addEventListener('submit', function(e) {
+                const content = contentTextarea.value.trim();
+                
+                // Prevent double submission
+                if (this.dataset.submitting === 'true') {
+                    e.preventDefault();
+                    return;
+                }
+                
+                // Final validation before submission
+                if (content.length < 5) {
+                    e.preventDefault();
+                    alert('Comment must be at least 5 characters long');
+                    contentTextarea.focus();
+                    return;
+                }
+                
+                if (content.length > 150) {
+                    e.preventDefault();
+                    alert('Comment must not exceed 150 characters');
+                    contentTextarea.focus();
+                    return;
+                }
+                
+                // Show loading state and prevent double submission
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+                submitBtn.disabled = true;
+                
+                // Add a flag to prevent multiple submissions
+                this.dataset.submitting = 'true';
+            });
+
+            // Initialize on page load
+            updateCharCount();
+            validateForm();
+        });
+    </script>
+</body>
+</html>

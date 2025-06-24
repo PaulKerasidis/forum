@@ -1,0 +1,77 @@
+# API Backend .dockerignore
+# Exclude unnecessary files from Docker build context
+
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+tmp/
+temp/
+
+# Go specific
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Go workspace file
+go.work
+
+# Dependency directories (comment these out if you need them for local development)
+vendor/
+
+# Database files - COMMENTED OUT to include existing database in build
+# DBPath/*.db
+# DBPath/*.db-journal
+# DBPath/*.db-wal
+# DBPath/*.db-shm
+
+# Environment variables (keep .env as we need it in container)
+# .env
+
+# Docker files (don't include other Docker files in build context)
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Build artifacts
+server
+forum-backend
+api-server
+
+# SQLite temporary files
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm

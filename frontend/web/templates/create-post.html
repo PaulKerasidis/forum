@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Post - Forum</title>
+    <!-- Global CSS first, then page-specific CSS -->
+    <link rel="stylesheet" href="/static/css/global.css">
+    <link rel="stylesheet" href="/static/css/create-post.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Component (using global CSS) -->
+        <header class="header">
+            <h1>Forum404NotFound</h1>
+            <nav>
+                <a href="/">Home</a>
+                {{if .User}}
+                    <a href="/create-post">Create Post</a>
+                    <a href="/profile">Profile</a>
+                    <span>Welcome, {{.User.Username | html}}!</span>
+                    <form method="POST" action="/logout" style="display: inline;">
+                        <button type="submit">Logout</button>
+                    </form>
+                {{else}}
+                    <a href="/login">Login</a>
+                    <a href="/register">Register</a>
+                {{end}}
+            </nav>
+        </header>
+
+        <!-- Breadcrumb Component (using global CSS) -->
+        <nav class="breadcrumb">
+            <a href="/"><i class="fas fa-home"></i> Home</a>
+            <span class="separator">></span>
+            <span class="current">Create New Post</span>
+        </nav>
+
+        <!-- Main Content Grid (using global CSS) -->
+        <div class="main-content">
+            <!-- Create Post Form Section (unique styling in create-post.css) -->
+            <section class="create-post-section">
+                <div class="form-header">
+                    <h2><i class="fas fa-plus-circle"></i> Create New Post</h2>
+                    <p>Share your thoughts with the community</p>
+                </div>
+
+                {{if .Error}}
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    {{.Error | html}}
+                </div>
+                {{end}}
+
+                <form method="POST" action="/create-post" class="create-post-form">
+                    <!-- Category Selection (unique styling) -->
+                    <div class="form-group">
+                        <label for="categories" class="form-label">
+                            <i class="fas fa-tags"></i> Categories *
+                        </label>
+                        <div class="category-selection">
+                            {{range .Categories}}
+                            <div class="category-checkbox">
+                                <input 
+                                    type="checkbox" 
+                                    id="category-{{.ID}}" 
+                                    name="categories" 
+                                    value="{{.Name | html}}"
+                                    {{if $.FormData.categories}}
+                                        {{range $.FormData.categories}}
+                                            {{if eq . $.Name}}checked{{end}}
+                                        {{end}}
+                                    {{else if eq $.PreSelectedCategory .ID}}
+                                        checked
+                                    {{end}}
+                                >
+                                <label for="category-{{.ID}}" class="category-label">
+                                    <span class="checkmark"></span>
+                                    <span class="category-name">{{.Name | html}}</span>
+                                    <span class="post-count">({{.Count}} posts)</span>
+                                </label>
+                            </div>
+                            {{end}}
+                        </div>
+                        <small class="form-help">
+                            <i class="fas fa-info-circle"></i>
+                            Select one or more categories that best describe your post
+                        </small>
+                    </div>
+
+                    <!-- Post Content -->
+                    <div class="form-group">
+                        <label for="content" class="form-label">
+                            <i class="fas fa-edit"></i> Post Content *
+                        </label>
+                        <textarea 
+                            id="content" 
+                            name="content" 
+                            class="form-control"
+                            placeholder="Write your post content here..." 
+                            required 
+                            minlength="10" 
+                            maxlength="500"
+                            rows="12">{{if .FormData.content}}{{.FormData.content | html}}{{end}}</textarea>
+                        <div class="character-counter">
+                            <span id="char-count">0</span> / 500 characters
+                            <span class="min-chars">(minimum 10 characters)</span>
+                        </div>
+                        <small class="form-help">
+                            <i class="fas fa-lightbulb"></i>
+                            Be descriptive and provide helpful details. Minimum 10 characters, maximum 500.
+                        </small>
+                    </div>
+
+                    <!-- Form Actions (using global CSS buttons) -->
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="history.back()">
+                            <i class="fas fa-arrow-left"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="submit-btn">
+                            <i class="fas fa-paper-plane"></i> Create Post
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Sidebar (using global CSS) -->
+            <aside class="sidebar">
+                <h3><i class="fas fa-clipboard-list"></i> Posting Guidelines</h3>
+                <div class="posting-guidelines">
+                    <ul>
+                        <li><i class="fas fa-check"></i> Be respectful and constructive</li>
+                        <li><i class="fas fa-check"></i> Choose appropriate categories</li>
+                        <li><i class="fas fa-check"></i> Write clear and descriptive content</li>
+                        <li><i class="fas fa-check"></i> No spam or inappropriate content</li>
+                        <li><i class="fas fa-check"></i> Use proper grammar and spelling</li>
+                    </ul>
+                </div>
+
+                <div class="info-widget mt-3xl">
+                    <h4><i class="fas fa-info-circle"></i> Category Information</h4>
+                    <div class="category-descriptions">
+                        {{range .Categories}}
+                        <div class="category-desc" data-category="{{.Name | html}}">
+                            <strong>{{.Name | html}}</strong>
+                            <p>{{.Count}} existing posts in this category</p>
+                        </div>
+                        {{end}}
+                    </div>
+                </div>
+
+                <!-- Quick Actions (using global CSS) -->
+                <div class="quick-actions">
+                    <h4><i class="fas fa-clock"></i> Quick Actions</h4>
+                    <p><a href="/" class="action-link">
+                        <i class="fas fa-list"></i> Browse All Posts
+                    </a></p>
+                    <p><a href="/profile" class="action-link">
+                        <i class="fas fa-user"></i> View Your Profile
+                    </a></p>
+                    <p><a href="/" class="action-link">
+                        <i class="fas fa-home"></i> Back to Home
+                    </a></p>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script>
+        // Configuration - Match your backend .env settings
+        const MIN_CATEGORIES = 1;  // MIN_CATEGORIES_PER_POST from .env
+        const MAX_CATEGORIES = 5;  // MAX_CATEGORIES_PER_POST from .env
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const contentTextarea = document.getElementById('content');
+            const categoryCheckboxes = document.querySelectorAll('input[name="categories"]');
+            const submitBtn = document.getElementById('submit-btn');
+            const charCount = document.getElementById('char-count');
+
+            // Update character count display
+            function updateCharCount() {
+                const currentLength = contentTextarea.value.length;
+                charCount.textContent = currentLength;
+                
+                // Color coding for character count
+                if (currentLength < 10) {
+                    charCount.style.color = '#e74c3c'; // Red - too short
+                } else if (currentLength > 450) {
+                    charCount.style.color = '#f39c12'; // Orange - getting close to limit
+                } else {
+                    charCount.style.color = '#27ae60'; // Green - good length
+                }
+            }
+
+            // Enhanced form validation with category count checks
+            function validateForm() {
+                const content = contentTextarea.value.trim();
+                const selectedCategories = Array.from(categoryCheckboxes).filter(cb => cb.checked);
+                const categoryCount = selectedCategories.length;
+                
+                // Content validation
+                const contentValid = content.length >= 10 && content.length <= 500;
+                
+                // Category validation
+                const categoriesValid = categoryCount >= MIN_CATEGORIES && categoryCount <= MAX_CATEGORIES;
+                
+                // Overall form validation
+                const isValid = contentValid && categoriesValid;
+                
+                // Update submit button state
+                submitBtn.disabled = !isValid;
+                if (isValid) {
+                    submitBtn.classList.remove('disabled');
+                } else {
+                    submitBtn.classList.add('disabled');
+                }
+                
+                // Update category validation message
+                updateCategoryValidationMessage(categoryCount);
+                
+                return isValid;
+            }
+
+            // Update category validation message
+            function updateCategoryValidationMessage(categoryCount) {
+                // Remove existing validation messages
+                const existingMessage = document.querySelector('.category-validation-message');
+                if (existingMessage) {
+                    existingMessage.remove();
+                }
+                
+                const categorySection = document.querySelector('.category-selection');
+                let message = '';
+                let messageClass = '';
+                
+                if (categoryCount < MIN_CATEGORIES) {
+                    message = `Please select at least ${MIN_CATEGORIES} category`;
+                    messageClass = 'error';
+                } else if (categoryCount > MAX_CATEGORIES) {
+                    message = `You can select a maximum of ${MAX_CATEGORIES} categories`;
+                    messageClass = 'error';
+                } else if (categoryCount === MAX_CATEGORIES) {
+                    message = `Maximum categories selected (${MAX_CATEGORIES}/${MAX_CATEGORIES})`;
+                    messageClass = 'warning';
+                } else {
+                    message = `${categoryCount}/${MAX_CATEGORIES} categories selected`;
+                    messageClass = 'success';
+                }
+                
+                // Create and insert validation message
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `category-validation-message ${messageClass}`;
+                messageDiv.innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
+                categorySection.appendChild(messageDiv);
+            }
+
+            // Enhanced category selection with proper limit enforcement
+            function handleCategoryChange(event) {
+                const checkbox = event.target;
+                const selectedCategories = Array.from(categoryCheckboxes).filter(cb => cb.checked);
+                const categoryCount = selectedCategories.length;
+                
+                // If trying to select more than MAX_CATEGORIES, prevent selection
+                if (checkbox.checked && categoryCount > MAX_CATEGORIES) {
+                    checkbox.checked = false;
+                    
+                    // Show user-friendly alert
+                    showCategoryLimitAlert();
+                    return;
+                }
+                
+                // Update form validation
+                validateForm();
+                
+                // Update other checkboxes' disabled state
+                updateCheckboxStates();
+            }
+
+            // Update checkbox states (disable when max reached)
+            function updateCheckboxStates() {
+                const selectedCategories = Array.from(categoryCheckboxes).filter(cb => cb.checked);
+                const categoryCount = selectedCategories.length;
+                
+                categoryCheckboxes.forEach(checkbox => {
+                    if (!checkbox.checked && categoryCount >= MAX_CATEGORIES) {
+                        checkbox.disabled = true;
+                        checkbox.parentElement.classList.add('disabled');
+                    } else {
+                        checkbox.disabled = false;
+                        checkbox.parentElement.classList.remove('disabled');
+                    }
+                });
+            }
+
+            // Show category limit alert
+            function showCategoryLimitAlert() {
+                // Create custom alert instead of browser alert for better UX
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'category-limit-alert';
+                alertDiv.innerHTML = `
+                    <div class="alert-content">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Maximum ${MAX_CATEGORIES} categories allowed</span>
+                        <button type="button" class="close-alert">&times;</button>
+                    </div>
+                `;
+                
+                // Insert alert
+                const categorySection = document.querySelector('.category-selection');
+                categorySection.appendChild(alertDiv);
+                
+                // Auto-remove after 3 seconds
+                setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.remove();
+                    }
+                }, 3000);
+                
+                // Allow manual close
+                alertDiv.querySelector('.close-alert').addEventListener('click', () => {
+                    alertDiv.remove();
+                });
+            }
+
+            // Event listeners
+            contentTextarea.addEventListener('input', function() {
+                updateCharCount();
+                validateForm();
+            });
+
+            categoryCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', handleCategoryChange);
+            });
+
+            // Enhanced form submission validation
+            document.querySelector('.create-post-form').addEventListener('submit', function(e) {
+                // Prevent double submission
+                if (this.dataset.submitting === 'true') {
+                    e.preventDefault();
+                    return;
+                }
+                
+                const content = contentTextarea.value.trim();
+                const selectedCategories = Array.from(categoryCheckboxes).filter(cb => cb.checked);
+                const categoryCount = selectedCategories.length;
+                
+                // Final validation before submission
+                if (content.length < 10) {
+                    e.preventDefault();
+                    alert('Post content must be at least 10 characters long');
+                    contentTextarea.focus();
+                    return;
+                }
+                
+                if (content.length > 500) {
+                    e.preventDefault();
+                    alert('Post content must not exceed 500 characters');
+                    contentTextarea.focus();
+                    return;
+                }
+                
+                if (categoryCount < MIN_CATEGORIES) {
+                    e.preventDefault();
+                    alert(`Please select at least ${MIN_CATEGORIES} category`);
+                    return;
+                }
+                
+                if (categoryCount > MAX_CATEGORIES) {
+                    e.preventDefault();
+                    alert(`You can select a maximum of ${MAX_CATEGORIES} categories`);
+                    return;
+                }
+                
+                // Show loading state and prevent double submission
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                submitBtn.disabled = true;
+                
+                // Add a flag to prevent multiple submissions
+                this.dataset.submitting = 'true';
+            });
+
+            // Initialize on page load
+            updateCharCount();
+            validateForm();
+            updateCheckboxStates();
+        });
+    </script>
+</body>
+</html>

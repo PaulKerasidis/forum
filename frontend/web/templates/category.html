@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Category.Name | html}} - Forum</title>
+    <link rel="stylesheet" href="/static/css/global.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Component -->
+        <header class="header">
+            <h1>Forum404NotFound</h1>
+            <nav>
+                <a href="/">Home</a>
+                {{if .User}}
+                    <a href="/create-post">Create Post</a>
+                    <a href="/profile">Profile</a>
+                    <span>Welcome, {{.User.Username | html}}!</span>
+                    <form method="POST" action="/logout" style="display: inline;">
+                        <button type="submit">Logout</button>
+                    </form>
+                {{else}}
+                    <a href="/login">Login</a>
+                    <a href="/register">Register</a>
+                {{end}}
+            </nav>
+        </header>
+
+        <!-- Category Banner Component -->
+        <div class="page-banner">
+            <div class="banner-content">
+                <h2>📂 {{.Category.Name | html}}</h2>
+                <p class="banner-description">Browse posts in {{.Category.Name | html}} category</p>
+            </div>
+            <div class="banner-stats">
+                <div class="post-count">📄 {{.Category.Count}} posts</div>
+            </div>
+        </div>
+
+        <!-- Breadcrumb Component -->
+        <nav class="breadcrumb">
+            <a href="/">Home</a>
+            <span class="separator">›</span>
+            <span class="current">{{.Category.Name | html}}</span>
+        </nav>
+
+        <!-- Sort Controls Component -->
+        <div class="sort-controls">
+            <label for="sort">Sort by:</label>
+            <select id="sort" onchange="changeSortOrder(this.value)">
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="likes">Most Liked</option>
+                <option value="comments">Most Comments</option>
+            </select>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="main-content">
+            <!-- Posts Section -->
+            <section class="info-widget">
+                {{if .Posts.Posts}}
+                    {{range .Posts.Posts}}
+                        <!-- Post Card Component -->
+                        <article class="post-card">
+                            <!-- Post Meta -->
+                            <div class="post-meta">
+                                <strong>{{.Username | html}}</strong>
+                                <span>•</span>
+                                <span>{{.CreatedAt.Format "Jan 2, 2006 at 3:04 PM"}}</span>
+                                {{if .UpdatedAt}}
+                                    <span class="updated-indicator">
+                                        ✏️ Updated {{.UpdatedAt.Format "Jan 2, 2006"}}
+                                    </span>
+                                {{end}}
+                                <span>•</span>
+                                {{range $index, $category := .Categories}}
+                                    {{if $index}}, {{end}}
+                                    {{if eq $category.ID $.Category.ID}}
+                                        <a href="/category/{{$category.ID}}" class="category-tag current-category">{{$category.Name | html}}</a>
+                                    {{else}}
+                                        <a href="/category/{{$category.ID}}" class="category-tag">{{$category.Name | html}}</a>
+                                    {{end}}
+                                {{end}}
+                            </div>
+
+                            <!-- Post Content -->
+                            <div class="post-content">
+                                {{.Content | html}}
+                            </div>
+
+                            <!-- Post Stats and Actions -->
+                            <div class="post-stats">
+                                <!-- Reaction Buttons (Only for logged-in users) -->
+                                {{if $.User}}
+                                    <div class="reaction-buttons">
+                                        <!-- Like Button -->
+                                        <form method="POST" action="/reactions/posts/toggle" style="display: inline;">
+                                            <input type="hidden" name="post_id" value="{{.ID | html}}">
+                                            <input type="hidden" name="reaction_type" value="1">
+                                            <input type="hidden" name="redirect_to" value="/category/{{$.Category.ID}}">
+                                            <button type="submit" class="reaction-btn like-btn {{if and .UserReaction (eq .UserReaction 1)}}active{{end}}">
+                                                👍 {{.LikeCount}}
+                                            </button>
+                                        </form>
+
+                                        <!-- Dislike Button -->
+                                        <form method="POST" action="/reactions/posts/toggle" style="display: inline;">
+                                            <input type="hidden" name="post_id" value="{{.ID | html}}">
+                                            <input type="hidden" name="reaction_type" value="2">
+                                            <input type="hidden" name="redirect_to" value="/category/{{$.Category.ID}}">
+                                            <button type="submit" class="reaction-btn dislike-btn {{if and .UserReaction (eq .UserReaction 2)}}active{{end}}">
+                                                👎 {{.DislikeCount}}
+                                            </button>
+                                        </form>
+                                    </div>
+                                {{else}}
+                                    <!-- Read-only reaction counts for non-logged-in users -->
+                                    <div class="reaction-display">
+                                        <span class="reaction-count">👍 {{.LikeCount}}</span>
+                                        <span class="reaction-count">👎 {{.DislikeCount}}</span>
+                                    </div>
+                                {{end}}
+
+                                <!-- Comment Count and View Link -->
+                                <span>💬 {{.CommentCount}}</span>
+                                <a href="/post/{{.ID}}" class="view-post-btn">View Discussion</a>
+                            </div>
+                        </article>
+                    {{end}}
+
+                    <!-- Pagination Component -->
+                    {{if gt .Posts.Pagination.TotalPages 1}}
+                        <nav class="pagination">
+                            <div class="pagination-info">
+                                Showing posts {{add (mul (sub .Posts.Pagination.CurrentPage 1) .Posts.Pagination.PerPage) 1}} - 
+                                {{if lt (mul .Posts.Pagination.CurrentPage .Posts.Pagination.PerPage) .Posts.Pagination.TotalCount}}
+                                    {{mul .Posts.Pagination.CurrentPage .Posts.Pagination.PerPage}}
+                                {{else}}
+                                    {{.Posts.Pagination.TotalCount}}
+                                {{end}}
+                                of {{.Posts.Pagination.TotalCount}} in {{.Category.Name | html}}
+                            </div>
+                            
+                            <div class="pagination-links">
+                                <!-- First page -->
+                                {{if gt .Posts.Pagination.CurrentPage 1}}
+                                    <a href="/category/{{$.Category.ID}}?limit={{.Posts.Pagination.PerPage}}&offset=0">First</a>
+                                {{end}}
+
+                                <!-- Previous page -->
+                                {{if .Posts.Pagination.HasPrevious}}
+                                    <a href="/category/{{$.Category.ID}}?limit={{.Posts.Pagination.PerPage}}&offset={{mul (sub .Posts.Pagination.CurrentPage 2) .Posts.Pagination.PerPage}}">Previous</a>
+                                {{end}}
+
+                                <!-- Page numbers -->
+                                {{range $i := range_until .Posts.Pagination.TotalPages}}
+                                    {{if eq $i $.Posts.Pagination.CurrentPage}}
+                                        <span class="current">{{$i}}</span>
+                                    {{else if or (le $i 3) (ge $i (sub $.Posts.Pagination.TotalPages 2)) (and (ge $i (sub $.Posts.Pagination.CurrentPage 2)) (le $i (add $.Posts.Pagination.CurrentPage 2)))}}
+                                        <a href="/category/{{$.Category.ID}}?limit={{$.Posts.Pagination.PerPage}}&offset={{mul (sub $i 1) $.Posts.Pagination.PerPage}}">{{$i}}</a>
+                                    {{else if or (eq $i 4) (eq $i (sub $.Posts.Pagination.TotalPages 3))}}
+                                        <span class="ellipsis">...</span>
+                                    {{end}}
+                                {{end}}
+
+                                <!-- Next page -->
+                                {{if .Posts.Pagination.HasNext}}
+                                    <a href="/category/{{$.Category.ID}}?limit={{.Posts.Pagination.PerPage}}&offset={{mul .Posts.Pagination.CurrentPage .Posts.Pagination.PerPage}}">Next</a>
+                                {{end}}
+
+                                <!-- Last page -->
+                                {{if lt .Posts.Pagination.CurrentPage .Posts.Pagination.TotalPages}}
+                                    <a href="/category/{{$.Category.ID}}?limit={{.Posts.Pagination.PerPage}}&offset={{mul (sub .Posts.Pagination.TotalPages 1) .Posts.Pagination.PerPage}}">Last</a>
+                                {{end}}
+                            </div>
+                        </nav>
+                    {{end}}
+                {{else}}
+                    <!-- No Posts State -->
+                    <div class="no-posts">
+                        <h3>📭 No posts in {{.Category.Name | html}} yet</h3>
+                        <p>Be the first to post in this category!</p>
+                        {{if .User}}
+                            <a href="/create-post?category={{.Category.Name | urlquery}}">Create the first {{.Category.Name | html}} post</a>
+                        {{else}}
+                            <a href="/register">Join the community</a>
+                        {{end}}
+                    </div>
+                {{end}}
+            </section>
+
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <h3>📂 All Categories</h3>
+                {{if .Categories}}
+                    <ul class="categories">
+                        <li>
+                            <a href="/">🏠 All Posts</a>
+                        </li>
+                        {{range .Categories}}
+                            <li>
+                                {{if eq .ID $.Category.ID}}
+                                    <a href="/category/{{.ID}}" class="active">{{.Name | html}}</a>
+                                {{else}}
+                                    <a href="/category/{{.ID}}">{{.Name | html}}</a>
+                                {{end}}
+                                <span>{{.Count}}</span>
+                            </li>
+                        {{end}}
+                    </ul>
+                {{end}}
+
+                <!-- Quick Actions -->
+                {{if .User}}
+                    <div class="quick-actions">
+                        <h4>⚡ Quick Actions</h4>
+                        <p><a href="/create-post?category={{.Category.Name | urlquery}}">📝 Create {{.Category.Name | html}} post</a></p>
+                        <p><a href="/create-post">📄 Create any post</a></p>
+                        <p><a href="/profile">👤 View your profile</a></p>
+                        <p><a href="/">🏠 Back to home</a></p>
+                    </div>
+                {{else}}
+                    <div class="quick-actions">
+                        <h4>👋 Join Us</h4>
+                        <p><a href="/register">📝 Sign up</a></p>
+                        <p><a href="/login">🔑 Login</a></p>
+                    </div>
+                {{end}}
+            </aside>
+        </div>
+    </div>
+
+    <script>
+        function changeSortOrder(sortBy) {
+            const url = new URL(window.location);
+            url.searchParams.set('sort', sortBy);
+            url.searchParams.delete('offset'); // Reset to first page when changing sort
+            window.location.href = url.toString();
+        }
+
+        // Set the current sort option in the dropdown
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentSort = urlParams.get('sort') || 'newest';
+            document.getElementById('sort').value = currentSort;
+        });
+    </script>
+</body>
+</html>

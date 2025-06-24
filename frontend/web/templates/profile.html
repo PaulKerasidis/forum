@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Profile.Username | html}}'s Profile - Forum</title>
+    <link rel="stylesheet" href="/static/css/global.css">
+    <link rel="stylesheet" href="/static/css/profile.css">
+    <!-- Add some nice icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Component -->
+        <header class="header">
+            <h1>Forum404NotFound</h1>
+            <nav>
+                <a href="/">Home</a>
+                {{if .User}}
+                    <a href="/create-post">Create Post</a>
+                    <a href="/profile">Profile</a>
+                    <span>Welcome, {{.User.Username | html}}!</span>
+                    <form method="POST" action="/logout" style="display: inline;">
+                        <button type="submit">Logout</button>
+                    </form>
+                {{else}}
+                    <a href="/login">Login</a>
+                    <a href="/register">Register</a>
+                {{end}}
+            </nav>
+        </header>
+
+        <!-- Breadcrumb Navigation -->
+        <nav class="breadcrumb">
+            <a href="/"><i class="fas fa-home"></i> Home</a>
+            <span class="separator">></span>
+            <span class="current">My Profile</span>
+        </nav>
+
+        <div class="main-content">
+            <!-- Profile Overview Section -->
+            <section class="profile-section">
+                <div class="profile-header">
+                    <div class="profile-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="profile-info">
+                        <h2>{{.Profile.Username | html}}</h2>
+                        <p class="profile-email">{{.Profile.Email | html}}</p>
+                        <p class="profile-joined">
+                            <i class="fas fa-calendar-alt"></i>
+                            Member since {{.Profile.CreatedAt.Format "January 2, 2006"}}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Profile Statistics -->
+                <div class="profile-stats">
+                    <h3><i class="fas fa-chart-bar"></i> Activity Overview</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card posts-created">
+                            <div class="stat-icon">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-number">{{.Profile.Stats.TotalPosts}}</div>
+                                <div class="stat-label">Posts Created</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card comments-made">
+                            <div class="stat-icon">
+                                <i class="fas fa-comments"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-number">{{.Profile.Stats.TotalComments}}</div>
+                                <div class="stat-label">Comments Made</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card posts-liked">
+                            <div class="stat-icon">
+                                <i class="fas fa-heart"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-number">{{.Profile.Stats.PostsLiked}}</div>
+                                <div class="stat-label">Posts Liked</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card posts-commented">
+                            <div class="stat-icon">
+                                <i class="fas fa-comment-dots"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-number">{{.Profile.Stats.PostsCommentedOn}}</div>
+                                <div class="stat-label">Posts Commented On</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card likes-received">
+                            <div class="stat-icon">
+                                <i class="fas fa-thumbs-up"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-number">{{.Profile.Stats.LikesReceived}}</div>
+                                <div class="stat-label">Likes Received</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card dislikes-received">
+                            <div class="stat-icon">
+                                <i class="fas fa-thumbs-down"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-number">{{.Profile.Stats.DislikesReceived}}</div>
+                                <div class="stat-label">Dislikes Received</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Navigation -->
+                <div class="activity-navigation">
+                    <h3><i class="fas fa-list"></i> View Your Activity</h3>
+                    <div class="nav-cards">
+                        <a href="/profile/my-posts" class="nav-card">
+                            <div class="nav-icon">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <div class="nav-content">
+                                <h4>My Posts</h4>
+                                <p>View all {{.Profile.Stats.TotalPosts}} posts you've created</p>
+                                <span class="nav-arrow"><i class="fas fa-arrow-right"></i></span>
+                            </div>
+                        </a>
+
+                        <a href="/profile/liked-posts" class="nav-card">
+                            <div class="nav-icon">
+                                <i class="fas fa-heart"></i>
+                            </div>
+                            <div class="nav-content">
+                                <h4>Liked Posts</h4>
+                                <p>Browse {{.Profile.Stats.PostsLiked}} posts you've liked</p>
+                                <span class="nav-arrow"><i class="fas fa-arrow-right"></i></span>
+                            </div>
+                        </a>
+
+                        <a href="/profile/commented-posts" class="nav-card">
+                            <div class="nav-icon">
+                                <i class="fas fa-comment-dots"></i>
+                            </div>
+                            <div class="nav-content">
+                                <h4>Commented Posts</h4>
+                                <p>See {{.Profile.Stats.PostsCommentedOn}} posts you've commented on</p>
+                                <span class="nav-arrow"><i class="fas fa-arrow-right"></i></span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="quick-actions">
+                    <h4><i class="fas fa-bolt"></i> Quick Actions</h4>
+                    <a href="/create-post" class="action-link">
+                        <i class="fas fa-plus"></i> Create New Post
+                    </a>
+                    <a href="/" class="action-link">
+                        <i class="fas fa-home"></i> Browse All Posts
+                    </a>
+                    <a href="/profile/my-posts" class="action-link">
+                        <i class="fas fa-file-alt"></i> View My Posts
+                    </a>
+                </div>
+
+                <div class="profile-summary">
+                    <h4><i class="fas fa-info-circle"></i> Profile Summary</h4>
+                    <div class="summary-item">
+                        <label>Username:</label>
+                        <span>{{.Profile.Username | html}}</span>
+                    </div>
+                    <div class="summary-item">
+                        <label>Member Since:</label>
+                        <span>{{.Profile.CreatedAt.Format "Jan 2, 2006"}}</span>
+                    </div>
+                    <div class="summary-item">
+                        <label>Total Activity:</label>
+                        <span>{{add .Profile.Stats.TotalPosts .Profile.Stats.TotalComments}} actions</span>
+                    </div>
+                </div>
+
+                {{if gt .Profile.Stats.TotalPosts 0}}
+                <div class="achievements">
+                    <h4><i class="fas fa-trophy"></i> Achievements</h4>
+                    <div class="achievement-badges">
+                        {{if ge .Profile.Stats.TotalPosts 1}}
+                        <span class="badge first-post">
+                            <i class="fas fa-baby"></i> First Post
+                        </span>
+                        {{end}}
+                        {{if ge .Profile.Stats.TotalPosts 10}}
+                        <span class="badge active-poster">
+                            <i class="fas fa-fire"></i> Active Poster
+                        </span>
+                        {{end}}
+                        {{if ge .Profile.Stats.TotalComments 10}}
+                        <span class="badge conversationalist">
+                            <i class="fas fa-comments"></i> Conversationalist
+                        </span>
+                        {{end}}
+                        {{if ge .Profile.Stats.LikesReceived 50}}
+                        <span class="badge well-liked">
+                            <i class="fas fa-heart"></i> Well Liked
+                        </span>
+                        {{end}}
+                    </div>
+                </div>
+                {{end}}
+            </aside>
+        </div>
+    </div>
+</body>
+</html>

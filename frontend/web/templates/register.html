@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Forum</title>
+    
+    <!-- Global CSS Variables (FIRST) -->
+    <link rel="stylesheet" href="/static/css/global.css">
+    
+    <!-- Auth-specific CSS -->
+    <link rel="stylesheet" href="/static/css/auth.css">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="auth-container">
+        <!-- Header -->
+        <div class="auth-header">
+            <h1>
+                <span class="icon-register"></span>
+                Join On Forum404NotFound
+            </h1>
+            <p>Create your account to start participating</p>
+        </div>
+
+        <!-- Form Container -->
+        <div class="form-container">
+            <!-- Error Message -->
+            {{if .Error}}
+            <div class="auth-alert error">
+                {{.Error | html}}
+            </div>
+            {{end}}
+            
+            <!-- Success Message -->
+            {{if .Success}}
+            <div class="auth-alert success">
+                {{.Success | html}}
+            </div>
+            {{end}}
+
+            <!-- Registration Form -->
+            <form method="POST" action="/register" class="auth-form" id="registerForm">
+                <!-- Username Field -->
+                <div class="auth-form-group">
+                    <label for="username" class="label-username">Username</label>
+                    <input type="text" 
+                           id="username" 
+                           name="username" 
+                           class="auth-input"
+                           value="{{if .FormData}}{{.FormData.Username | html}}{{end}}"
+                           required 
+                           minlength="5" 
+                           maxlength="15"
+                           autocomplete="username"
+                           placeholder="Choose a username">
+                    <div class="help-text">
+                        5-15 characters, letters, numbers, and underscores only
+                    </div>
+                </div>
+
+                <!-- Email Field -->
+                <div class="auth-form-group">
+                    <label for="email" class="label-email">Email Address</label>
+                    <input type="email" 
+                           id="email" 
+                           name="email" 
+                           class="auth-input"
+                           value="{{if .FormData}}{{.FormData.Email | html}}{{end}}"
+                           required
+                           autocomplete="email"
+                           placeholder="Enter your email address">
+                    <div class="help-text">
+                        Valid email address required for account verification
+                    </div>
+                </div>
+
+                <!-- Password Field -->
+                <div class="auth-form-group">
+                    <label for="password" class="label-password">Password</label>
+                    <input type="password" 
+                           id="password" 
+                           name="password" 
+                           class="auth-input"
+                           required 
+                           minlength="3" 
+                           maxlength="15"
+                           autocomplete="new-password"
+                           placeholder="Create a strong password">
+                    
+                    <!-- Password Strength Indicator -->
+                    <div class="password-strength" id="passwordStrength" style="display: none;">
+                        <div class="password-strength-title">Password Requirements:</div>
+                        <div class="password-requirements">
+                            <div class="requirement" id="req-length">
+                                3-15 characters
+                            </div>
+                            <div class="requirement" id="req-uppercase">
+                                Uppercase letter
+                            </div>
+                            <div class="requirement" id="req-lowercase">
+                                Lowercase letter
+                            </div>
+                            <div class="requirement" id="req-number">
+                                Number
+                            </div>
+                            <div class="requirement" id="req-special">
+                                Special character
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Confirm Password Field -->
+                <div class="auth-form-group">
+                    <label for="confirm-password" class="label-confirm">Confirm Password</label>
+                    <input type="password" 
+                           id="confirm-password" 
+                           name="confirm_password" 
+                           class="auth-input"
+                           required 
+                           minlength="3" 
+                           maxlength="15"
+                           autocomplete="new-password"
+                           placeholder="Confirm your password">
+                    <div class="help-text">
+                        Re-enter your password to confirm
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="auth-btn auth-btn-primary" id="submitBtn">
+                    <span class="btn-icon-register"></span>
+                    Create Account
+                </button>
+            </form>
+
+            <!-- Links -->
+            <div class="auth-links">
+                <p>Already have an account?</p>
+                <a href="/login" class="link-login">Sign In</a>
+                <a href="/" class="link-home">Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('registerForm');
+            const usernameInput = document.getElementById('username');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const confirmPasswordInput = document.getElementById('confirm-password');
+            const submitBtn = document.getElementById('submitBtn');
+            const passwordStrength = document.getElementById('passwordStrength');
+
+            // Validation functions
+            function validateUsername(username) {
+                const usernameRegex = /^[a-zA-Z0-9_]+$/;
+                return username.length >= 5 && username.length <= 15 && usernameRegex.test(username);
+            }
+
+            function validateEmail(email) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return emailRegex.test(email);
+            }
+
+            function validatePassword(password) {
+                const requirements = {
+                    length: password.length >= 3 && password.length <= 15,
+                    uppercase: /[A-Z]/.test(password),
+                    lowercase: /[a-z]/.test(password),
+                    number: /[0-9]/.test(password),
+                    special: /[^a-zA-Z0-9]/.test(password)
+                };
+                
+                return requirements;
+            }
+
+            // Username validation
+            usernameInput.addEventListener('input', function() {
+                const username = this.value.trim();
+                
+                // Remove existing validation messages
+                const existingMsg = this.parentNode.querySelector('.validation-message');
+                if (existingMsg) {
+                    existingMsg.remove();
+                }
+
+                if (username && !validateUsername(username)) {
+                    this.classList.add('invalid');
+                    this.classList.remove('valid');
+                    
+                    const errorMsg = document.createElement('div');
+                    errorMsg.className = 'validation-message error';
+                    if (username.length < 5) {
+                        errorMsg.textContent = 'Username must be at least 5 characters';
+                    } else if (username.length > 15) {
+                        errorMsg.textContent = 'Username must be no more than 15 characters';
+                    } else {
+                        errorMsg.textContent = 'Username can only contain letters, numbers, and underscores';
+                    }
+                    this.parentNode.appendChild(errorMsg);
+                } else if (username) {
+                    this.classList.add('valid');
+                    this.classList.remove('invalid');
+                    
+                    const successMsg = document.createElement('div');
+                    successMsg.className = 'validation-message success';
+                    successMsg.textContent = 'Username looks good!';
+                    this.parentNode.appendChild(successMsg);
+                } else {
+                    this.classList.remove('valid', 'invalid');
+                }
+            });
+
+            // Email validation
+            emailInput.addEventListener('input', function() {
+                const email = this.value.trim();
+                
+                // Remove existing validation messages
+                const existingMsg = this.parentNode.querySelector('.validation-message');
+                if (existingMsg) {
+                    existingMsg.remove();
+                }
+
+                if (email && !validateEmail(email)) {
+                    this.classList.add('invalid'); 
+                    this.classList.remove('valid');
+                    
+                    const errorMsg = document.createElement('div');
+                    errorMsg.className = 'validation-message error';
+                    errorMsg.textContent = 'Please enter a valid email address';
+                    this.parentNode.appendChild(errorMsg);
+                } else if (email) {
+                    this.classList.add('valid');
+                    this.classList.remove('invalid');
+                    
+                    const successMsg = document.createElement('div');
+                    successMsg.className = 'validation-message success';
+                    successMsg.textContent = 'Email format is valid';
+                    this.parentNode.appendChild(successMsg);
+                } else {
+                    this.classList.remove('valid', 'invalid');
+                }
+            });
+
+            // Password validation with visual feedback
+            passwordInput.addEventListener('input', function() {
+                const password = this.value;
+                
+                // Show/hide password strength indicator
+                if (password.length > 0) {
+                    passwordStrength.style.display = 'block';
+                } else {
+                    passwordStrength.style.display = 'none';
+                    this.classList.remove('valid', 'invalid');
+                    return;
+                }
+                
+                const requirements = validatePassword(password);
+                
+                // Update requirement indicators
+                document.getElementById('req-length').classList.toggle('met', requirements.length);
+                document.getElementById('req-uppercase').classList.toggle('met', requirements.uppercase);
+                document.getElementById('req-lowercase').classList.toggle('met', requirements.lowercase);
+                document.getElementById('req-number').classList.toggle('met', requirements.number);
+                document.getElementById('req-special').classList.toggle('met', requirements.special);
+                //
+                // Update input styling
+                const allMet = Object.values(requirements).every(req => req);
+                if (allMet) {
+                    this.classList.add('valid');
+                    this.classList.remove('invalid');
+                } else {
+                    this.classList.add('invalid');
+                    this.classList.remove('valid');
+                }
+                //
+                // Check password confirmation if it has a value
+                if (confirmPasswordInput.value) {
+                    validatePasswordConfirmation();
+                }
+            });
+
+            // Password confirmation validation
+            function validatePasswordConfirmation() {
+                const password = passwordInput.value;
+                const confirmPassword = confirmPasswordInput.value;
+                
+                // Remove existing validation messages
+                const existingMsg = confirmPasswordInput.parentNode.querySelector('.validation-message');
+                if (existingMsg) {
+                    existingMsg.remove();
+                }
+
+                if (confirmPassword && password !== confirmPassword) {
+                    confirmPasswordInput.classList.add('invalid');
+                    confirmPasswordInput.classList.remove('valid');
+                    
+                    const errorMsg = document.createElement('div');
+                    errorMsg.className = 'validation-message error';
+                    errorMsg.textContent = 'Passwords do not match';
+                    confirmPasswordInput.parentNode.appendChild(errorMsg);
+                } else if (confirmPassword && password === confirmPassword) {
+                    confirmPasswordInput.classList.add('valid');
+                    confirmPasswordInput.classList.remove('invalid');
+                    
+                    const successMsg = document.createElement('div');
+                    successMsg.className = 'validation-message success';
+                    successMsg.textContent = 'Passwords match!';
+                    confirmPasswordInput.parentNode.appendChild(successMsg);
+                } else {
+                    confirmPasswordInput.classList.remove('valid', 'invalid');
+                }
+            }
+
+            confirmPasswordInput.addEventListener('input', validatePasswordConfirmation);
+
+            // Form submission
+            form.addEventListener('submit', function(e) {
+                const username = usernameInput.value.trim();
+                const email = emailInput.value.trim();
+                const password = passwordInput.value;
+                const confirmPassword = confirmPasswordInput.value;
+
+                // Prevent double submission
+                if (submitBtn.classList.contains('loading')) {
+                    e.preventDefault();
+                    return;
+                }
+
+                // Final validation
+                if (!username || !email || !password || !confirmPassword) {
+                    e.preventDefault();
+                    alert('Please fill in all fields');
+                    return;
+                }
+
+                if (!validateUsername(username)) {
+                    e.preventDefault();
+                    alert('Please enter a valid username (5-15 characters, letters, numbers, and underscores only)');
+                    usernameInput.focus();
+                    return;
+                }
+                
+                if (!validateEmail(email)) {
+                    e.preventDefault();
+                    alert('Please enter a valid email address');
+                    emailInput.focus();
+                    return;
+                }
+
+                const passwordRequirements = validatePassword(password);
+                const allPasswordReqsMet = Object.values(passwordRequirements).every(req => req);
+                if (!allPasswordReqsMet) {
+                    e.preventDefault();
+                    alert('Password must meet all requirements: 3-15 characters with uppercase, lowercase, number, and special character');
+                    passwordInput.focus();
+                    return;
+                }
+
+                if (password !== confirmPassword) {
+                    e.preventDefault();
+                    alert('Passwords do not match. Please check your password and try again.');
+                    confirmPasswordInput.focus();
+                    return;
+                }
+
+                // Show loading state
+                submitBtn.classList.add('loading');
+                submitBtn.disabled = true;
+                
+                // Allow form to submit
+                setTimeout(() => {
+                    // Reset loading state after 10 seconds (fallback)
+                    submitBtn.classList.remove('loading');
+                    submitBtn.disabled = false;
+                }, 10000);
+            });
+
+            // Auto-focus first empty field
+            if (!usernameInput.value) {
+                usernameInput.focus();
+            } else if (!emailInput.value) {
+                emailInput.focus();
+            } else if (!passwordInput.value) {
+                passwordInput.focus();
+            } else if (!confirmPasswordInput.value) {
+                confirmPasswordInput.focus();
+            }
+        });
+    </script>
+</body>
+</html>

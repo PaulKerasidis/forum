@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Forum</title>
+    
+    <!-- Global CSS Variables (FIRST) -->
+    <link rel="stylesheet" href="/static/css/global.css">
+    
+    <!-- Auth-specific CSS -->
+    <link rel="stylesheet" href="/static/css/auth.css">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="auth-container">
+        <!-- Header -->
+        <div class="auth-header">
+            <h1>
+                <span class="icon-login"></span>
+                Welcome Back to Forum404NotFound
+            </h1>
+            <p>Sign in to your account</p>
+        </div>
+
+        <!-- Form Container -->
+        <div class="form-container">
+            <!-- Error Message -->
+            {{if .Error}}
+            <div class="auth-alert error">
+                {{.Error | html}}
+            </div>
+            {{end}}
+            
+            <!-- Success Message -->
+            {{if .Success}}
+            <div class="auth-alert success">
+                {{.Success | html}}
+            </div>
+            {{end}}
+
+            <!-- Login Form -->
+            <form method="POST" action="/login" class="auth-form" id="loginForm">
+                <!-- Email Field -->
+                <div class="auth-form-group">
+                    <label for="email" class="label-email">Email Address</label>
+                    <input type="email" 
+                           id="email" 
+                           name="email" 
+                           class="auth-input"
+                           value="{{if .FormData}}{{.FormData.Email | html}}{{end}}"
+                           required 
+                           autocomplete="email"
+                           placeholder="Enter your email address">
+                    <div class="help-text">
+                        Use the email address you registered with
+                    </div>
+                </div>
+
+                <!-- Password Field -->
+                <div class="auth-form-group">
+                    <label for="password" class="label-password">Password</label>
+                    <input type="password" 
+                           id="password" 
+                           name="password" 
+                           class="auth-input"
+                           required 
+                           autocomplete="current-password"
+                           placeholder="Enter your password">
+                    <div class="help-text">
+                        Password is case-sensitive
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="auth-btn auth-btn-primary" id="submitBtn">
+                    <span class="btn-icon-login"></span>
+                    Sign In
+                </button>
+            </form>
+
+            <!-- OAuth Divider -->
+            <div class="oauth-divider">
+                <span>OR</span>
+            </div>
+
+            <!-- OAuth Login -->
+            <div class="oauth-container">
+                <a href="/auth/google/login" class="oauth-btn google-btn">
+                    <i class="fab fa-google"></i>
+                    Continue with Google
+                </a>
+            </div>
+
+            <!-- Links -->
+            <div class="auth-links">
+                <p>Don't have an account?</p>
+                <a href="/register" class="link-register">Create Account</a>
+                <a href="/" class="link-home">Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('loginForm');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const submitBtn = document.getElementById('submitBtn');
+
+            // Email validation
+            function validateEmail(email) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return emailRegex.test(email);
+            }
+
+            // Real-time email validation
+            emailInput.addEventListener('input', function() {
+                const email = this.value.trim();
+                
+                // Remove existing validation messages
+                const existingMsg = this.parentNode.querySelector('.validation-message');
+                if (existingMsg) {
+                    existingMsg.remove();
+                }
+
+                if (email && !validateEmail(email)) {
+                    this.classList.add('invalid');
+                    this.classList.remove('valid');
+                    
+                    const errorMsg = document.createElement('div');
+                    errorMsg.className = 'validation-message error';
+                    errorMsg.textContent = 'Please enter a valid email address';
+                    this.parentNode.appendChild(errorMsg);
+                } else if (email) {
+                    this.classList.add('valid');
+                    this.classList.remove('invalid');
+                    
+                    const successMsg = document.createElement('div');
+                    successMsg.className = 'validation-message success';
+                    successMsg.textContent = 'Email format is valid';
+                    this.parentNode.appendChild(successMsg);
+                } else {
+                    this.classList.remove('valid', 'invalid');
+                }
+            });
+
+            // Password validation
+            passwordInput.addEventListener('input', function() {
+                const password = this.value;
+                
+                // Remove existing validation messages
+                const existingMsg = this.parentNode.querySelector('.validation-message');
+                if (existingMsg) {
+                    existingMsg.remove();
+                }
+
+                if (password.length >= 3) {
+                    this.classList.add('valid');
+                    this.classList.remove('invalid');
+                } else if (password.length > 0) {
+                    this.classList.add('invalid');
+                    this.classList.remove('valid');
+                    
+                    const errorMsg = document.createElement('div');
+                    errorMsg.className = 'validation-message error';
+                    errorMsg.textContent = 'Password must be at least 3 characters';
+                    this.parentNode.appendChild(errorMsg);
+                } else {
+                    this.classList.remove('valid', 'invalid');
+                }
+            });
+
+            // Form submission
+            form.addEventListener('submit', function(e) {
+                const email = emailInput.value.trim();
+                const password = passwordInput.value;
+
+                // Prevent double submission
+                if (submitBtn.classList.contains('loading')) {
+                    e.preventDefault();
+                    return;
+                }
+
+                // Final validation
+                if (!email || !password) {
+                    e.preventDefault();
+                    alert('Please fill in all fields');
+                    return;
+                }
+
+                if (!validateEmail(email)) {
+                    e.preventDefault();
+                    alert('Please enter a valid email address');
+                    emailInput.focus();
+                    return;
+                }
+
+                if (password.length < 3) {
+                    e.preventDefault();
+                    alert('Password must be at least 3 characters long');
+                    passwordInput.focus();
+                    return;
+                }
+
+                // Show loading state
+                submitBtn.classList.add('loading');
+                submitBtn.disabled = true;
+                
+                // Allow form to submit
+                setTimeout(() => {
+                    // Reset loading state after 5 seconds (fallback)
+                    submitBtn.classList.remove('loading');
+                    submitBtn.disabled = false;
+                }, 5000);
+            });
+
+            // Auto-focus first empty field
+            if (!emailInput.value) {
+                emailInput.focus();
+            } else if (!passwordInput.value) {
+                passwordInput.focus();
+            }
+        });
+    </script>
+</body>
+</html>
